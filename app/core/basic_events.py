@@ -8,8 +8,8 @@ from app.core.db_events import (
 )
 
 def create_start_app_handler(app: FastAPI) -> Callable:  # type: ignore
-    def start_app() -> None:
-        connect_to_mongo(app)
+    async def start_app() -> None:
+        await connect_to_mongo(app)
     return start_app
 
 

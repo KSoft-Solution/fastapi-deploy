@@ -1,24 +1,35 @@
 from fastapi import FastAPI
 from loguru import logger
 from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
 
 from app.core.basic_config import (
     MONGODB_URL, MONGODB_MAX_CONNECTIONS_COUNT, MONGODB_MIN_CONNECTIONS_COUNT,
 )
+from app.models.user import UserModel
 
 class MongoDB:
     client: MongoClient = None
 
 mongo_db = MongoDB()
 
-def connect_to_mongo(app: FastAPI) -> None:
+async def connect_to_mongo(app: FastAPI) -> None:
     logger.info("Connect to the Mongodb...")
-    mongo_client = MongoClient(
-        MONGODB_URL,
-        maxPoolSize=MONGODB_MAX_CONNECTIONS_COUNT,
-        minPoolSize=MONGODB_MIN_CONNECTIONS_COUNT,
+    mongo_client = AsyncIOMotorClient(MONGODB_URL).elecload_freelance_project
+    await init_beanie(
+        database=mongo_client,
+        document_models=[
+            UserModel,
+        ]
     )
-    mongo_db.client = mongo_client
+
+    # mongo_client = MongoClient(
+    #     MONGODB_URL,
+    #     maxPoolSize=MONGODB_MAX_CONNECTIONS_COUNT,
+    #     minPoolSize=MONGODB_MIN_CONNECTIONS_COUNT,
+    # )
+    # mongo_db.client = mongo_client
     app.state.mongo_client = mongo_client
     logger.info("Mongodb connection succeeded！")
 

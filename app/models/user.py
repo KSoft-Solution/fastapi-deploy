@@ -1,38 +1,44 @@
-from typing import Union
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+from typing import Optional
+from uuid import UUID, uuid4
+from beanie import Document, Indexed
+from pydantic import EmailStr, Field
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+class UserModel(Document):
+    user_id: UUID = Field(default_factory=uuid4)
+    username: Indexed(str, unique=True) # type: ignore
+    email: Indexed(EmailStr, unique=True) # type: ignore
+    hashed_password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    disabled: bool = False
+    email_confirmed_at: Optional[datetime] = None
 
+    def __repr__(self) -> str:
+        return f"<User {self.email}>"
 
-class TokenData(BaseModel):
-    email: Union[str, None] = EmailStr
+    def __str__(self) -> str:
+        return self.email
 
+    def __hash__(self) -> int:
+        return hash(self.email)
 
-class UserLoginSchema(BaseModel):
-    email: EmailStr = Field(...)
-    password: str = Field(...)
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, UserModel):
+            return self.email == other.email
+        return False
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "email": "email@example.com",
-                "password": "somepassword"
-            }
-        }
+    @property
+    def created(self) -> datetime:
+        return self.id.generation_time
 
-class UserSignupSchema(BaseModel):
-    email: EmailStr = Field(...)
-    password: str = Field(...)
-    password_confirmation: str = Field(...)
+    @classmethod
+    async def by_email(self, email: str) -> "UserModel":
+        return await self.find_one(self.email == email)
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "email": "email@example.com",
-                "password": "somepassword",
-                "password_confirmation": "somepassword"
-            }
-        }
+    # class Collection:
+    #     name = "users"
+
+    class Settings:
+        name = "users"

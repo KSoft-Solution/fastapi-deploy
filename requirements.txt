@@ -17,3 +17,11 @@ typing
 loguru
 starlette
 odmantic
+mongoengine
+fastapi_mail
+jinja2
+beanie
+python-jose[cryptography]
+python-jose[pycryptodome]
+python-jose
+bcrypt
